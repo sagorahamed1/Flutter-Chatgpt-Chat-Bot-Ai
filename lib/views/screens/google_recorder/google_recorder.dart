@@ -17,6 +17,8 @@ class GoogleRecorder extends StatefulWidget {
 
 class _GoogleRecorderState extends State<GoogleRecorder> {
   bool isSpeak = false;
+  String text = '';
+  bool isLoading = false;
   TextEditingController textController = TextEditingController();
   final SpeechToText speechToTextinstance = SpeechToText();
   String recoudedAudioString = "";
@@ -27,17 +29,20 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
     setState(() {});
   }
 
+  ///---------------------start lisining------------------------->
   void StartLisiningNow() async {
     FocusScope.of(context).unfocus();
     await speechToTextinstance.listen(onResult: onSpeechToResult);
     setState(() {});
   }
 
+  ///---------------------stop lisinig----------------------->
   StopLisininNow() async {
     await speechToTextinstance.stop();
     setState(() {});
   }
 
+  ///---------------------------on speech to result---------------------------->
   void onSpeechToResult(SpeechRecognitionResult recognitionResult) {
     recoudedAudioString = recognitionResult.recognizedWords;
     print("------------------------------$recoudedAudioString");
@@ -46,6 +51,7 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
     });
   }
 
+
   @override
   void initState() {
     // TODO: implement initState
@@ -53,26 +59,40 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
     InitializeSpeechToText();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
+      ///---------------------------------app bar---------------------------->
       appBar: AppBar(
-        backgroundColor: Colors.purple,
-        title: const Text("Open Ai"),
+        backgroundColor: Colors.transparent,
+        title: const Text("Open Ai", style: TextStyle(color: Colors.white),),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.message)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.image))
+          IconButton(onPressed: () {}, icon: const Icon(Icons.message,color: Colors.white,)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.image,color: Colors.white,))
         ],
       ),
+
+
+
+      ///---------------------------floating action button---------------------------->
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.transparent,
         onPressed: () {
-          isSpeak ?  Speak(text) : StopSeak();
           setState(() {
             isSpeak = !isSpeak;
           });
+          isSpeak ?  Speak(text) : stopSpeaking();
         },
         child: isSpeak ? Image.asset("assets/images/sound.png") : Image.asset("assets/images/mute.png"),
       ),
+
+
+
+      ///----------------------------body section--------------------------------------->
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
@@ -81,6 +101,7 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
               ///--------------------------------recording image---------------------------------->
               IconButton(
                   onPressed: () {
+                    ///--------------------stop and start lisining-------------------------->
                     speechToTextinstance.isListening
                         ? StopLisininNow()
                         : StartLisiningNow();
@@ -107,6 +128,7 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
                       controller: textController,
                       decoration: InputDecoration(
                           hintText: "How can i help you?",
+                          hintStyle: const TextStyle(color: Colors.white),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8))),
                     ),
@@ -114,6 +136,9 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
                   const SizedBox(
                     width: 5,
                   ),
+
+
+                  ///----------------------------stop lisinging and get gemini ai--------------------->
                   GestureDetector(
                     onTap: () {
                       StopLisininNow();
@@ -142,7 +167,7 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
               ),
 
               ///
-              Container(width: double.infinity, child: Text("$text")),
+              SizedBox(width: double.infinity, child: Text(text)),
             ],
           ),
         ),
@@ -150,9 +175,8 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
     );
   }
 
-  String text = '';
-  bool isLoading = false;
 
+  ///-----------------------get gemini from here---------------------------->
   Future<void> getGemini(String question) async {
     setState(() {
       isLoading = true;
@@ -174,15 +198,21 @@ class _GoogleRecorderState extends State<GoogleRecorder> {
     }
   }
 
-  ///---------------------------------- text speek---------------------------------->
 
+
+  ///---------------------------------- text speek---------------------------------->
   FlutterTts flutterTts = FlutterTts();
   Speak(String text) async {
     await flutterTts.setLanguage("en-US");
     await flutterTts.setPitch(1);
     await flutterTts.speak(text);
   }
-  StopSeak(){
 
+  ///--------------------------stop speaking----------------------------------->
+  Future<void> stopSpeaking() async {
+    await flutterTts.stop();
   }
+
+
+
 }
